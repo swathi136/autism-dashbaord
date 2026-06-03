@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REHAAB Clinical Data Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .form-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .form-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .required::after { content: "*"; color: #ef4444; margin-left: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col transition-all duration-300 md:relative absolute z-20 h-full" id="sidebar">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-700">
+            <i data-lucide="activity" class="text-blue-400 w-8 h-8"></i>
+            <div>
+                <h1 class="text-xl font-bold leading-tight">REHAAB</h1>
+                <p class="text-xs text-slate-400">Data Collection Tool</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1 px-3">
+                <li><button type="button" onclick="switchTab('consent')" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors bg-blue-600 text-white font-medium" data-target="consent"><i data-lucide="clipboard-signature" class="w-5 h-5"></i> 1. Consent & Info</button></li>
+                <li><button type="button" onclick="switchTab('demographics')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="demographics"><i data-lucide="user" class="w-5 h-5"></i> 2. Demographics</button></li>
+                <li><button type="button" onclick="switchTab('environment')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="environment"><i data-lucide="map-pin" class="w-5 h-5"></i> 3. Environment</button></li>
+                <li><button type="button" onclick="switchTab('diagnosis')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="diagnosis"><i data-lucide="stethoscope" class="w-5 h-5"></i> 4. Diagnosis</button></li>
+                <li><button type="button" onclick="switchTab('symptoms')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="symptoms"><i data-lucide="brain" class="w-5 h-5"></i> 5. Core Symptoms</button></li>
+                <li><button type="button" onclick="switchTab('medical')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="medical"><i data-lucide="baby" class="w-5 h-5"></i> 6. Medical History</button></li>
+                <li><button type="button" onclick="switchTab('milestones')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="milestones"><i data-lucide="footprints" class="w-5 h-5"></i> 7. Milestones</button></li>
+                <li><button type="button" onclick="switchTab('family')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="family"><i data-lucide="users" class="w-5 h-5"></i> 8. Family History</button></li>
+                <li><button type="button" onclick="switchTab('food')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="food"><i data-lucide="utensils" class="w-5 h-5"></i> 9. Food Habits</button></li>
+                <li><button type="button" onclick="switchTab('gi_metabolic')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="gi_metabolic"><i data-lucide="activity" class="w-5 h-5"></i> 10. GI & Metabolic</button></li>
+                <li><button type="button" onclick="switchTab('sleep')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="sleep"><i data-lucide="moon" class="w-5 h-5"></i> 11. Sleep & Behaviour</button></li>
+                <li><button type="button" onclick="switchTab('treatments')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="treatments"><i data-lucide="pill" class="w-5 h-5"></i> 12. Treatments</button></li>
+                <li><button type="button" onclick="switchTab('history')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="history"><i data-lucide="history" class="w-5 h-5"></i> 13. Treatment History</button></li>
+                <li><button type="button" onclick="switchTab('medications')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="medications"><i data-lucide="syringe" class="w-5 h-5"></i> 14. Medications</button></li>
+                <li><button type="button" onclick="switchTab('lab')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="lab"><i data-lucide="flask-conical" class="w-5 h-5"></i> 15. Lab Data</button></li>
+                <li><button type="button" onclick="switchTab('amino')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="amino"><i data-lucide="dna" class="w-5 h-5"></i> 16. Amino Acids</button></li>
+                <li><button type="button" onclick="switchTab('uploads')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors text-slate-300 hover:bg-slate-800 hover:text-white" data-target="uploads"><i data-lucide="upload-cloud" class="w-5 h-5"></i> 17. Uploads</button></li>
+            </ul>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-700">
+            <div class="bg-slate-800 rounded-lg p-3 flex items-center gap-3">
+                <div class="bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">DR</div>
+                <div class="text-sm">
+                    <p class="font-medium">Data Entry Portal</p>
+                    <p class="text-slate-400 text-xs">Logged in</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <header class="md:hidden bg-white shadow-sm p-4 flex items-center gap-3 z-10 w-full">
+            <button onclick="toggleSidebar()" class="p-2 bg-slate-100 rounded-md text-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-300"><i data-lucide="menu"></i></button>
+            <h1 class="font-bold text-lg text-slate-800">REHAAB Tool</h1>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div id="successMessage" class="hidden mb-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-start gap-3 shadow-sm">
+                <i data-lucide="check-circle-2" class="text-emerald-500 mt-0.5"></i>
+                <div>
+                    <h3 class="font-medium text-emerald-800">Record Saved Successfully</h3>
+                    <p class="text-emerald-600 text-sm mt-1">The patient data has been securely saved to the REHAAB database.</p>
+                </div>
+                <button type="button" onclick="hideSuccess()" class="ml-auto text-emerald-400 hover:text-emerald-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <form id="clinicalForm" onsubmit="handleFormSubmit(event)">
+                    
+                    <!-- Section 1 -->
+                    <section id="consent" class="form-section active p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">1. Consent and Study Information</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1 required">1. Parent/guardian name</label><input type="text" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1 required">2. Relationship to child</label><input type="text" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Mother, Father, etc."></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1 required">3. Contact number</label><input type="tel" required class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Email ID</label><input type="email" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 2 -->
+                    <section id="demographics" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">2. Child Demographic Details</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1 required">1. Child’s full name</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Age</label><input type="number" min="0" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1 required">3. Date of birth</label><input type="date" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1 required">4. Gender</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Height</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Weight</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. BMI</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md bg-slate-50 focus:ring-0 outline-none text-slate-500" placeholder="Auto-calculated" readonly></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Blood group</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. School-going status</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="lg:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">10. Type of school: mainstream /inclusive/ special school / home schooling</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Class / grade</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Primary caregiver</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 3 -->
+                    <section id="environment" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">3. Geographical and Environmental Details</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Country</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. State</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. District</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. City / town / village</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Pin code</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Urban / semi-urban / rural location</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">7. Current place of residence</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Duration of stay in present location</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Exposure to industrial pollution</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Exposure to pesticides / agricultural chemicals</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Drinking water source</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">12. Type of house: apartment / independent house / rural house</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="Apartment">Apartment</option><option value="Independent House">Independent house</option><option value="Rural House">Rural house</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Exposure to pets or farm animals</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Screen exposure time daily</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 4 -->
+                    <section id="diagnosis" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">4. Autism Diagnosis Details</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Age at first concern noticed</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Age at diagnosis</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">3. Diagnosed by: pediatrician / developmental pediatrician / neurologist / psychiatrist / psychologist</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="pediatrician">Pediatrician</option><option value="developmental_pediatrician">Developmental Pediatrician</option><option value="neurologist">Neurologist</option><option value="psychiatrist">Psychiatrist</option><option value="psychologist">Psychologist</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">4. Diagnosis given: ASD / ADHD / global developmental delay / speech delay / intellectual disability / others</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="ASD">ASD</option><option value="ADHD">ADHD</option><option value="global_delay">Global developmental delay</option><option value="speech_delay">Speech delay</option><option value="intellectual_disability">Intellectual disability</option><option value="others">Others</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">5. Severity level: mild / moderate / severe</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="mild">Mild</option><option value="moderate">Moderate</option><option value="severe">Severe</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">6. Diagnostic tool used, if known: ADOS / CARS / DSM-5 / ISAA / M-CHAT / others</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="ADOS">ADOS</option><option value="CARS">CARS</option><option value="DSM-5">DSM-5</option><option value="ISAA">ISAA</option><option value="M-CHAT">M-CHAT</option><option value="others">Others</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Childhood Autism Rating Scale (CARS) score, if available</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Autism Diagnostic Observation Schedule (ADOS-2) score, if available</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Indian Scale for Assessment of Autism (ISAA) score, if available</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. IQ / developmental quotient, if tested</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">11. Language level: non-verbal / single words / short phrases / fluent speech</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="non-verbal">Non-verbal</option><option value="single_words">Single words</option><option value="short_phrases">Short phrases</option><option value="fluent_speech">Fluent speech</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">12. Regression history: yes / no</label>
+                                <select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="">Select</option><option value="yes">Yes</option><option value="no">No</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Age of regression, if any</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">14. Skills lost during regression: speech / eye contact / social interaction / motor skills / others</label>
+                                <input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 5 -->
+                    <section id="symptoms" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4">
+                            <h2 class="text-2xl font-semibold text-slate-800">5. Core Autism Symptom Profile</h2>
+                        </div>
+                        <div id="symptoms-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </section>
+
+                    <!-- Section 6 -->
+                    <section id="medical" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">6. Medical and Birth History</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Mother’s age at pregnancy</label><input type="number" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Father’s age at conception</label><input type="number" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Consanguineous marriage: yes / no</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Mode of conception: natural / IVF / IUI / assisted reproduction</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="natural">Natural</option><option value="ivf">IVF</option><option value="iui">IUI</option><option value="assisted">Assisted reproduction</option></select></div>
+                            <div class="lg:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">5. Pregnancy complications</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Maternal diabetes</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Maternal hypertension</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Thyroid disorder during pregnancy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Infection during pregnancy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Medication use during pregnancy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Antibiotic use during pregnancy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Fever during pregnancy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="lg:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">13. Exposure to toxins / chemicals during pregnancy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Delivery type: normal / C-section / assisted delivery</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="normal">Normal</option><option value="c_section">C-section</option><option value="assisted">Assisted delivery</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">15. Gestational age at birth</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">16. Birth weight</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">17. Neonatal Intensive Care Unit (NICU) admission history</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">18. Birth asphyxia / delayed cry</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">19. Neonatal jaundice</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">20. Seizures after birth</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">21. Breastfeeding duration</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">22. Formula feeding history</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">23. Weaning age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">24. Vaccination status</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="lg:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">25. Any adverse events after vaccination, as reported by parent</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 7 -->
+                    <section id="milestones" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">7. Developmental Milestones</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Neck holding age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Sitting age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Crawling age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Standing age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Walking age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. First words age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Two-word phrase age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Toilet training age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Fine motor development</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Gross motor development</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Social smile age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Response to name age</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-3"><label class="block text-sm font-medium text-slate-700 mb-1">13. Any developmental delay noticed</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 8 -->
+                    <section id="family" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">8. Family History</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Family history of autism spectrum disorder (ASD)</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Family history of Attention-Deficit/Hyperactivity Disorder (ADHD)</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Family history of speech delay</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Family history of epilepsy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Family history of intellectual disability</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Family history of psychiatric illness</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Family history of autoimmune disease</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Family history of allergies</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Family history of metabolic disorders</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Family history of gastrointestinal disorders</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">11. Sibling developmental history</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">12. Any sibling with ASD or neurodevelopmental condition</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 9 -->
+                    <section id="food" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">9. Food Habits and Nutritional History</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Vegetarian / non-vegetarian / vegan</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select diet</option><option value="vegetarian">Vegetarian</option><option value="non_vegetarian">Non-vegetarian</option><option value="vegan">Vegan</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Regular diet pattern</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Food selectivity: mild / moderate / severe</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select level</option><option value="mild">Mild</option><option value="moderate">Moderate</option><option value="severe">Severe</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Picky eating</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Food texture preference</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Avoided foods</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Preferred foods</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Appetite: poor / normal / excessive</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select appetite</option><option value="poor">Poor</option><option value="normal">Normal</option><option value="excessive">Excessive</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Food cravings</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Water intake</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">11. Constipation-related diet pattern</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Use of special diet: gluten-free / casein-free / ketogenic / low sugar / others</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select diet</option><option value="gluten-free">Gluten-free</option><option value="casein-free">Casein-free</option><option value="ketogenic">Ketogenic</option><option value="low sugar">Low sugar</option><option value="others">Others</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Duration of special diet</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">14. Response to special diet</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 10 -->
+                    <section id="gi_metabolic" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">10. Gastrointestinal and Metabolic Symptoms</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Constipation</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Diarrhea</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Bloating</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Abdominal pain</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Acid reflux</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Vomiting tendency</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Undigested food in stool</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Food intolerance</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Food allergy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Stool frequency</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Stool consistency</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Gut infection history</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Worm infestation history</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Probiotic use</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">15. Antibiotic use in the past 6 months</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">16. Recurrent infections</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">17. Frequent fever</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">18. Skin allergy / eczema</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">19. Asthma / wheezing</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">20. Unusual body odour / urine odour</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 11 -->
+                    <section id="sleep" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">11. Sleep and Behaviour Details</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Sleep onset difficulty</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Frequent night waking</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Early morning waking</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Total sleep duration</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Daytime sleepiness</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Snoring</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Bruxism / teeth grinding</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Restlessness during sleep</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="occasional">Occasional</option></select></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">9. Behaviour worsening with poor sleep</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Aggression frequency</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Self-injury frequency</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Tantrum frequency</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">13. Triggers for tantrums</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">14. Calming strategies</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 12 -->
+                    <section id="treatments" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">12. Current Treatments and Interventions</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">1. Speech therapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Occupational therapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Behaviour therapy / ABA</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Special education</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Sensory integration therapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Physiotherapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Cognitive therapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Parent training program</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Social skills training</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Music therapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Yoga therapy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Ayurveda / Siddha / homeopathy / naturopathy</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Biomedical interventions</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Dietary intervention</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">15. Supplements</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">16. Medication</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option><option value="past">Previously</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">17. Frequency of therapy per week</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">18. Duration of current therapy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">19. Parent-perceived improvement</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-3"><label class="block text-sm font-medium text-slate-700 mb-1">20. Areas improved</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-3"><label class="block text-sm font-medium text-slate-700 mb-1">21. Areas not improved</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 13 -->
+                    <section id="history" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">13. Treatment History</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">1. Previous therapies tried</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Age when therapy started</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Duration of each therapy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">4. Reason for stopping therapy</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Previous medications</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Previous supplements</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Previous special diets</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Previous hospitalizations</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Previous neurological evaluation</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Previous genetic testing</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Previous metabolic testing</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Previous EEG</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Previous MRI / CT</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Previous gut microbiome test (Whether performed or not)</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">15. Previous amino acid profile test (Whether performed or not)</label><select class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 14 -->
+                    <section id="medications" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">14. Medication and Supplement Details</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">1. Current prescription medicines</label><textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-20" placeholder="List all current medicines..."></textarea></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">2. Dose and duration</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Details of dosage and how long they have been taken"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Antiepileptic drugs</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Antipsychotic drugs</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. ADHD medications</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Sleep medicines</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">7. Antianxiety medicines</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">8. Digestive medicines</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">9. Laxatives</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Antibiotics</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. Probiotics</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">12. Multivitamins</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Vitamin B12</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Vitamin D</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">15. Omega-3</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">16. Magnesium</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">17. Zinc</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">18. Iron</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">19. Folate</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">20. Amino acid supplements</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Specify if any"></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-700 mb-1">21. Any adverse reaction to medicine or supplement</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Details of adverse reactions"></div>
+                        </div>
+                    </section>
+
+                    <!-- Section 15 -->
+                    <section id="lab" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">15. Laboratory and Clinical Data</h2></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">1. CBC Details</label>
+                                <textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-16" placeholder="WBC, RBC, Platelets, etc..."></textarea>
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">2. Hemoglobin</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">3. Ferritin</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">4. Vitamin B12</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">5. Vitamin D</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">6. Folate</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-3"><label class="block text-sm font-medium text-slate-700 mb-1">7. Thyroid profile</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none" placeholder="T3, T4, TSH values..."></div>
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">8. Liver Function Test</label>
+                                <textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-16" placeholder="AST, ALT, Bilirubin, etc..."></textarea>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">9. Kidney Function Test</label>
+                                <textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-16" placeholder="Urea, Creatinine, etc..."></textarea>
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">10. Blood glucose</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">11. HbA1c</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-3"><label class="block text-sm font-medium text-slate-700 mb-1">12. CRP / inflammation markers</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">13. Lactate</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">14. Ammonia</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-1">15. Homocysteine</label><input type="text" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">16. Stool test details</label>
+                                <textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-16" placeholder="Ova, cysts, calprotectin, etc."></textarea>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">17. Allergy test results</label>
+                                <textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-16" placeholder="IgE levels, specific allergens..."></textarea>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">18. Genetic test, if available</label>
+                                <textarea class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none h-20" placeholder="Details of genetic testing..."></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 16 -->
+                    <section id="amino" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4"><h2 class="text-2xl font-semibold text-slate-800">16. Amino Acid Profile</h2></div>
+                        <div class="mb-8 max-w-sm"><label class="block text-sm font-medium text-slate-700 mb-1 required">Date of sample collection</label><input type="date" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4" id="amino-grid">
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">1-Methyl-histidine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">3-Methyl-histidine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Alpha aminoadipic acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Alpha amino butyric acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Alanine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Anserine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Arginine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Argininosuccinic acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Asparagine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Aspartic acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Beta-amino-isobutyric acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Beta-alanine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Carnosine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Citrulline</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Cystathionine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Cystine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Ethanolamine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Gamma amino isobutyric acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Glutamine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Glutamic acid</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Glycine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Homocitrulline</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Homocystine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Histidine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Hydroxylysine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Hydroxyproline</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Isoleucine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Leucine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Lysine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Methionine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Methionine sulfoxide</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Norleucine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Norvaline</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Ornithine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Phosphoethanolamine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Phenylalanine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Proline</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Phosphoserine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Sarcosine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Serine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Taurine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Threonine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Tryptophan</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Tyrosine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Valine</label><input type="number" step="0.01" class="w-full px-3 py-1.5 text-sm border border-slate-300 rounded outline-none"></div>
+                        </div>
+                        
+                        <div class="mt-8 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Report upload option</label>
+                                <input type="file" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Repeat test date, if applicable</label>
+                                <input type="date" class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 17 -->
+                    <section id="uploads" class="form-section p-6 md:p-8">
+                        <div class="mb-6 border-b border-slate-100 pb-4">
+                            <h2 class="text-2xl font-semibold text-slate-800">17. Upload Section</h2>
+                            <p class="text-slate-500 text-sm mt-1">Please attach relevant clinical documents and reports below.</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">1. Autism diagnosis report</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">2. Previous lab reports</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">3. Amino acid profile report</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">4. Prescription copy</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">5. Therapy assessment report</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">6. Developmental assessment report</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">7. Diet chart</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">8. Stool / gut test report</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">9. Genetic test report</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">10. Parent observation notes</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i data-lucide="file-up" class="w-6 h-6 text-slate-400 mb-1"></i>
+                                            <p class="text-xs text-slate-500"><span class="font-semibold text-blue-600">Click to upload</span> or drag and drop</p>
+                                        </div>
+                                        <input type="file" class="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Footer Action Bar -->
+                    <div class="bg-slate-50 border-t border-slate-200 p-4 md:p-6 flex justify-between items-center sticky bottom-0 z-10">
+                        <div class="text-sm text-slate-500"><span id="progressText">Step 1 of 17</span></div>
+                        <div class="flex gap-3">
+                            <button type="button" onclick="nextTab()" id="nextBtn" class="px-6 py-2 bg-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-300 transition-colors">Next Section</button>
+                            <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Save Record</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="h-12"></div>
+        </div>
+    </main>
+
+    <div id="mobileOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-10 hidden md:hidden"></div>
+
+    <script>
+        lucide.createIcons();
+
+        // Symptoms Data
+        const symptomsList = ["Eye contact", "Response to name", "Social smile", "Joint attention", "Interest in peers", "Pretend play", "Repetitive movements", "Spinning / lining up objects", "Hand flapping", "Toe walking", "Restricted interests", "Sensory sensitivity to sound", "Sensory sensitivity to light", "Sensory sensitivity to touch", "Sensory sensitivity to food texture", "Hyperactivity", "Attention span", "Aggression", "Self-injury", "Anxiety", "Meltdowns", "Sleep disturbance", "Communication difficulty", "Social interaction difficulty", "Daily living skill difficulty"];
+        
+        const symptomsContainer = document.getElementById('symptoms-container');
+        symptomsList.forEach((symptom, index) => {
+            const div = document.createElement('div');
+            div.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-slate-100 rounded-lg bg-slate-50/50";
+            div.innerHTML = `<label class="text-sm font-medium text-slate-700 mb-2 sm:mb-0">${index + 1}. ${symptom}</label><select class="w-full sm:w-48 px-3 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm"><option value="">Select severity</option><option value="typical">Typical / Normal</option><option value="mild">Mild Concern</option><option value="moderate">Moderate Concern</option><option value="severe">Severe Concern</option></select>`;
+            symptomsContainer.appendChild(div);
+        });
+
+        // Tabs
+        const tabs = ['consent', 'demographics', 'environment', 'diagnosis', 'symptoms', 'medical', 'milestones', 'family', 'food', 'gi_metabolic', 'sleep', 'treatments', 'history', 'medications', 'lab', 'amino', 'uploads'];
+        let currentTabIndex = 0;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('bg-blue-600', 'text-white', 'font-medium');
+                    btn.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'font-medium');
+                    btn.classList.add('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+                }
+            });
+
+            currentTabIndex = tabs.indexOf(tabId);
+            document.getElementById('progressText').textContent = `Step ${currentTabIndex + 1} of ${tabs.length}`;
+            document.getElementById('nextBtn').style.display = currentTabIndex === tabs.length - 1 ? 'none' : 'block';
+            if (window.innerWidth < 768) toggleSidebar();
+            document.querySelector('.flex-1.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextTab() { if (currentTabIndex < tabs.length - 1) switchTab(tabs[currentTabIndex + 1]); }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobileOverlay').classList.toggle('hidden');
+        }
+
+        if (window.innerWidth < 768) document.getElementById('sidebar').classList.add('-translate-x-full');
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            document.getElementById('successMessage').classList.remove('hidden');
+            document.querySelector('.flex-1.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('clinicalForm').reset();
+            setTimeout(() => switchTab('consent'), 500);
+            setTimeout(() => document.getElementById('successMessage').classList.add('hidden'), 5000);
+        }
+    </script>
+</body>
+</html>
