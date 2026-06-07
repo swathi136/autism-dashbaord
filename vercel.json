@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/admin_login.html",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/admin", "destination": "/admin_login.html" },
     { "source": "/practitioner", "destination": "/practitioner_login.html" },
