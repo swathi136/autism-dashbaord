@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-start justify-center p-8">
+  <div class="w-full max-w-2xl bg-white rounded-lg shadow p-6">
+    <h2 class="text-2xl font-semibold mb-4">Profile</h2>
+    <div id="noUser" class="hidden">
+      <p class="text-slate-600">No user signed in. Please <a href="admin_login.html" class="text-blue-600">login</a>.</p>
+    </div>
+    <form id="profileForm" class="space-y-4">
+      <div>
+        <label class="block text-sm mb-1">Name</label>
+        <input id="name" class="w-full px-3 py-2 border rounded" />
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Email</label>
+        <input id="email" class="w-full px-3 py-2 border rounded bg-slate-100" readonly />
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Role</label>
+        <input id="role" class="w-full px-3 py-2 border rounded bg-slate-100" readonly />
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="saveBtn" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
+        <button id="logoutBtnLocal" type="button" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+      </div>
+    </form>
+    <p class="text-sm text-slate-500 mt-4">Return to <a href="index.html" class="text-blue-600">Home</a></p>
+  </div>
+  <script src="auth.js"></script>
+  <script>
+    const noUser = document.getElementById('noUser');
+    const profileForm = document.getElementById('profileForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const roleInput = document.getElementById('role');
+    const saveBtn = document.getElementById('saveBtn');
+    const logoutBtnLocal = document.getElementById('logoutBtnLocal');
+
+    function loadProfile(){
+      const user = getCurrentUser();
+      if(!user){
+        noUser.classList.remove('hidden');
+        profileForm.classList.add('hidden');
+        return;
+      }
+      noUser.classList.add('hidden');
+      profileForm.classList.remove('hidden');
+      nameInput.value = user.name || '';
+      // If name not provided, show role as placeholder so profile shows Admin/Practitioner until name is set
+      if(!user.name || user.name.trim() === ''){
+        nameInput.placeholder = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : '';
+      } else {
+        nameInput.placeholder = '';
+      }
+      emailInput.value = user.email || '';
+      roleInput.value = user.role || '';
+    }
+
+    profileForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      saveProfile({ name: nameInput.value.trim() });
+      alert('Profile updated');
+    });
+
+    logoutBtnLocal.addEventListener('click', function(){ logout(); });
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>

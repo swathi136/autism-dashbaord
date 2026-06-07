@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center">
+  <div class="w-full max-w-md bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Register</h2>
+    <form id="regForm" autocomplete="off" novalidate>
+      <!-- Hidden fields to reduce browser autofill suggestions -->
+      <input type="text" name="__fake_username" autocomplete="username" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;border:0;padding:0;margin:0;">
+      <input type="password" name="__fake_password" autocomplete="current-password" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;border:0;padding:0;margin:0;">
+      <label class="block text-sm mb-1">Name</label>
+      <input id="name" name="reg_name" type="text" required class="w-full mb-3 px-3 py-2 border rounded" autocomplete="name" />
+      <label class="block text-sm mb-1">Email</label>
+      <input id="email" name="reg_email" type="email" required class="w-full mb-3 px-3 py-2 border rounded" autocomplete="off" />
+      <label class="block text-sm mb-1">Password</label>
+      <input id="password" name="reg_password" type="password" required class="w-full mb-3 px-3 py-2 border rounded" autocomplete="new-password" />
+      <label class="block text-sm mb-1">Role</label>
+      <select id="role" class="w-full mb-4 px-3 py-2 border rounded">
+        <option value="admin">Admin</option>
+        <option value="practitioner">Practitioner</option>
+      </select>
+      <button class="w-full bg-green-600 text-white py-2 rounded">Register and Enter</button>
+    </form>
+    <p class="text-sm text-slate-500 mt-4">Already have an account? <a id="backToLogin" href="#" class="text-blue-600">Sign in</a></p>
+  </div>
+  <script src="auth.js"></script>
+  <script>
+    function qs(name){
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || '';
+    }
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const role = qs('role');
+      const email = qs('email');
+      if(role) document.getElementById('role').value = role;
+      if(email) document.getElementById('email').value = decodeURIComponent(email);
+      const back = document.getElementById('backToLogin');
+      back.href = role === 'admin' ? 'admin_login.html' : 'practitioner_login.html';
+      // Clear any browser-autofilled values after a short delay (helps override aggressive autofill)
+      setTimeout(()=>{
+        const e = document.getElementById('email');
+        const p = document.getElementById('password');
+        // preserve email if it came from URL param
+        if(!qs('email') && e) e.value = '';
+        if(p) p.value = '';
+      }, 50);
+    });
+
+    document.getElementById('regForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+      const res = registerUser({ name, email, password, role });
+      if(!res.success){ alert(res.message); return; }
+      // auto-login after register
+      setSessionUser(role, name, email);
+    });
+  </script>
+</body>
+</html>

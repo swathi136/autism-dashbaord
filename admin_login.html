@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center">
+  <div class="w-full max-w-md bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Admin Login</h2>
+    <form id="loginForm" autocomplete="off">
+      <label class="block text-sm mb-1">Email</label>
+      <input id="email" name="email_admin" type="email" autocomplete="off" required class="w-full mb-3 px-3 py-2 border rounded" />
+      <label class="block text-sm mb-1">Password</label>
+      <input id="password" name="password_admin" type="password" autocomplete="new-password" required class="w-full mb-4 px-3 py-2 border rounded" />
+      <button class="w-full bg-blue-600 text-white py-2 rounded">Sign in as Admin</button>
+    </form>
+    <p class="text-sm text-slate-500 mt-4">Need practitioner login? <a href="practitioner_login.html" class="text-blue-600">Practitioner</a> · <a href="register.html?role=admin" class="text-blue-600">Register</a></p>
+    <p class="text-sm mt-2"><a href="index.html" class="text-slate-600">Back to Home</a></p>
+  </div>
+  <script src="auth.js"></script>
+  <script>
+    // Clear potential autofill values on load to avoid browser remembering older project credentials
+    document.addEventListener('DOMContentLoaded', function(){
+      const e = document.getElementById('email');
+      const p = document.getElementById('password');
+      if(e) { e.value = ''; e.autocomplete = 'off'; }
+      if(p) { p.value = ''; p.autocomplete = 'new-password'; }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      login(email, password, 'admin');
+    });
+  </script>
+</body>
+</html>
