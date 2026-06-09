@@ -6,7 +6,8 @@ const bcrypt = require('bcrypt');
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+// allow larger JSON payloads from the client (forms can be sizable)
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static("public"));
 
 app.post("/register", async (req, res) => {
@@ -45,6 +46,14 @@ app.post("/login", (req, res) => {
 
 // Save full form into patient_sections; create patient if needed
 app.post('/api/save-form', (req, res) => {
+  console.log('[/api/save-form] incoming body keys:', Object.keys(req.body || {}));
+  console.log('[/api/save-form] body preview:', JSON.stringify(req.body ? {
+    patient_name: req.body.patient_name,
+    parent_email: req.body.parent_email,
+    created_by_email: req.body.created_by_email,
+    sections_keys: req.body.sections ? Object.keys(req.body.sections) : undefined
+  } : {}));
+
   const { patient_name, parent_email, sections, created_by_email } = req.body || {};
 
   // helper to continue insert once we have a patient_id
@@ -67,28 +76,47 @@ app.post('/api/save-form', (req, res) => {
     });
   }
 
-  // find or create patient
-  function findOrCreatePatient(cb) {
-    if (!patient_name && !parent_email) return cb(new Error('No patient identifier provided'));
-    db.query('SELECT id FROM patients WHERE child_name = ? OR parent_email = ? LIMIT 1', [patient_name || '', parent_email || ''], (err, rows) => {
+  // find or create patient (allow creating a minimal patient even if identifiers missing)
+  // accepts userId to set created_by when creating a new patient
+  function findOrCreatePatient(userId, cb) {
+    db.query('SELECT id FROM patients WHERE (child_name = ? AND child_name IS NOT NULL) OR (parent_email = ? AND parent_email IS NOT NULL) LIMIT 1', [patient_name || '', parent_email || ''], (err, rows) => {
       if (err) return cb(err);
       if (rows.length > 0) return cb(null, rows[0].id);
-      // create minimal patient
+      // create minimal patient (allow null values)
+      const nameForInsert = (patient_name && patient_name.trim()) ? patient_name.trim() : 'Unknown';
       const insertSql = 'INSERT INTO patients (child_name, parent_name, parent_email, created_at) VALUES (?,?,?,NOW())';
-      db.query(insertSql, [patient_name || null, null, parent_email || null], (err2, result) => {
+      db.query(insertSql, [nameForInsert, null, parent_email || null], (err2, result) => {
         if (err2) return cb(err2);
-        cb(null, result.insertId);
+        const newId = result.insertId;
+        // if we have a userId, set patients.created_by
+        if (userId) {
+          db.query('UPDATE patients SET created_by = ? WHERE id = ?', [userId, newId], () => {
+            // ignore update error, return patient id anyway
+            return cb(null, newId);
+          });
+        } else {
+          cb(null, newId);
+        }
       });
     });
   }
 
   // orchestrate
   findUserId(created_by_email, (errU, userId) => {
-    if (errU) return res.status(500).json({ success: false, message: 'DB error (user lookup)' });
-    findOrCreatePatient((errP, patientId) => {
-      if (errP) return res.status(400).json({ success: false, message: errP.message || 'Patient error' });
+    if (errU) {
+      console.error('[/api/save-form] user lookup error:', errU);
+      return res.status(500).json({ success: false, message: 'DB error (user lookup)', error: errU.message });
+    }
+    findOrCreatePatient(userId, (errP, patientId) => {
+      if (errP) {
+        console.error('[/api/save-form] patient error:', errP);
+        return res.status(400).json({ success: false, message: errP.message || 'Patient error', error: errP.message });
+      }
       insertSection(patientId, (errS, sectionId) => {
-        if (errS) return res.status(500).json({ success: false, message: 'Failed to save section' });
+        if (errS) {
+          console.error('[/api/save-form] insert section error:', errS);
+          return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+        }
         res.json({ success: true, patient_id: patientId, section_id: sectionId });
       });
     });

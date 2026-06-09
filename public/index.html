@@ -774,51 +774,74 @@
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            // Serialize each section: use labels as keys and nearby input/select/textarea values
+            // Serialize each section: gather all inputs/selects/textareas and use nearest label text as key
             const sections = {};
             document.querySelectorAll('.form-section').forEach(section => {
                 const id = section.id || 'section';
                 const obj = {};
-                // find label-input pairs within the section
-                const groups = section.querySelectorAll('label');
-                groups.forEach(label => {
-                    let key = label.textContent || label.innerText || '';
-                    key = key.replace(/\n/g, ' ').trim();
-                    // try to find an associated input/select/textarea
-                    let value = '';
-                    // Prefer elements in same parent
-                    const parent = label.parentElement;
-                    let field = null;
-                    if (parent) field = parent.querySelector('input, select, textarea');
-                    if (!field) {
-                        // try next sibling
-                        let sib = label.nextElementSibling;
-                        while (sib && !field) {
-                            if (sib.matches && (sib.matches('input,select,textarea'))) field = sib;
-                            sib = sib.nextElementSibling;
+                const fields = section.querySelectorAll('input, select, textarea');
+                fields.forEach(field => {
+                    // skip hidden fields
+                    if (field.type === 'hidden') return;
+                    // find a descriptive label: associated <label for="id"> or nearest previous label in same parent
+                    let key = '';
+                    if (field.id) {
+                        const assoc = section.querySelector('label[for="' + field.id + '"]');
+                        if (assoc) key = assoc.textContent || assoc.innerText || '';
+                    }
+                    if (!key) {
+                        // search up for a label in the ancestor container
+                        let ancestor = field.parentElement;
+                        let found = null;
+                        for (let i = 0; i < 4 && ancestor; i++) {
+                            const lab = ancestor.querySelector('label');
+                            if (lab) { found = lab; break; }
+                            ancestor = ancestor.parentElement;
                         }
+                        if (found) key = found.textContent || found.innerText || '';
                     }
-                    if (field) {
-                        if (field.type === 'checkbox') value = field.checked;
-                        else value = field.value;
+                    if (!key) {
+                        // fallback: previous sibling label
+                        const prev = field.previousElementSibling;
+                        if (prev && prev.tagName && prev.tagName.toLowerCase() === 'label') key = prev.textContent || prev.innerText || '';
                     }
+                    key = (key || field.name || field.id || ('field_' + Math.random().toString(36).slice(2,8))).replace(/\n/g, ' ').trim();
+                    let value = '';
+                    if (field.type === 'checkbox') value = field.checked;
+                    else if (field.type === 'radio') {
+                        if (!field.checked) return; // only take checked radio
+                        value = field.value;
+                    } else value = field.value;
                     obj[key] = value;
                 });
                 sections[id] = obj;
             });
 
-            // derive basic patient identifiers
+            // derive basic patient identifiers from section keys/values
             let patient_name = '';
             let parent_email = '';
-            const dem = document.getElementById('demographics');
-            if (dem) {
-                const first = dem.querySelector('input, select, textarea');
-                if (first) patient_name = first.value || '';
+            if (sections.demographics) {
+                const keys = Object.keys(sections.demographics || {});
+                // try to find a key that mentions child or full name
+                for (const k of keys) {
+                    if (/child|full name|child’s|child's|child name/i.test(k)) {
+                        patient_name = sections.demographics[k] || '';
+                        break;
+                    }
+                }
+                // fallback: try common keys
+                if (!patient_name && keys.length > 0) patient_name = sections.demographics[keys[0]] || '';
             }
-            const consent = document.getElementById('consent');
-            if (consent) {
-                const emailEl = consent.querySelector('input[type="email"]');
-                if (emailEl) parent_email = emailEl.value || '';
+            if (sections.consent) {
+                for (const k of Object.keys(sections.consent || {})) {
+                    if (/email/i.test(k)) { parent_email = sections.consent[k] || ''; break; }
+                }
+            } else {
+                const consent = document.getElementById('consent');
+                if (consent) {
+                    const emailEl = consent.querySelector('input[type="email"]');
+                    if (emailEl) parent_email = emailEl.value || '';
+                }
             }
 
             // current user from auth.js (if present)
