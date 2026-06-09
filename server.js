@@ -66,6 +66,55 @@ app.post('/api/save-form', (req, res) => {
     });
   }
 
+  // map common demographic fields into patients table
+  function updatePatientFromDemographics(patientId, demographics, userId, cb) {
+    if (!demographics || typeof demographics !== 'object') return cb(null);
+    // helper to find value by regex key
+    function findValue(obj, regex) {
+      for (const k of Object.keys(obj)) {
+        if (regex.test(k)) return obj[k];
+      }
+      return undefined;
+    }
+
+    const ageRaw = findValue(demographics, /\bage\b/i) || findValue(demographics, /age of/i);
+    const dobRaw = findValue(demographics, /date of birth|dob|birth/i);
+    const genderRaw = findValue(demographics, /gender/i);
+    const heightRaw = findValue(demographics, /height/i);
+    const weightRaw = findValue(demographics, /weight/i);
+    const bmiRaw = findValue(demographics, /bmi/i);
+    const bloodGroupRaw = findValue(demographics, /blood/i);
+    const schoolStatusRaw = findValue(demographics, /school-going|school status|school/i);
+    const classGradeRaw = findValue(demographics, /class|grade/i);
+    const primaryCaregiverRaw = findValue(demographics, /primary caregiver/i);
+
+    const updates = [];
+    const params = [];
+    if (ageRaw !== undefined && ageRaw !== '') { const a = parseInt(String(ageRaw).replace(/[^0-9\-]/g,''),10); if (!isNaN(a)) { updates.push('age=?'); params.push(a); } }
+    if (dobRaw) { // try to normalize to YYYY-MM-DD if possible
+      const d = new Date(dobRaw);
+      if (!isNaN(d.getTime())) { const iso = d.toISOString().split('T')[0]; updates.push('dob=?'); params.push(iso); }
+      else { updates.push('dob=?'); params.push(dobRaw); }
+    }
+    if (genderRaw) { updates.push('gender=?'); params.push(String(genderRaw).trim()); }
+    if (heightRaw) { const h = parseFloat(String(heightRaw).replace(/[^0-9\.\-]/g,'')); if (!isNaN(h)) { updates.push('height=?'); params.push(h); } }
+    if (weightRaw) { const w = parseFloat(String(weightRaw).replace(/[^0-9\.\-]/g,'')); if (!isNaN(w)) { updates.push('weight=?'); params.push(w); } }
+    if (bmiRaw) { const b = parseFloat(String(bmiRaw).replace(/[^0-9\.\-]/g,'')); if (!isNaN(b)) { updates.push('bmi=?'); params.push(b); } }
+    if (bloodGroupRaw) { updates.push('blood_group=?'); params.push(String(bloodGroupRaw).trim()); }
+    if (schoolStatusRaw) { updates.push('school_status=?'); params.push(String(schoolStatusRaw).trim()); }
+    if (classGradeRaw) { updates.push('class_grade=?'); params.push(String(classGradeRaw).trim()); }
+    if (primaryCaregiverRaw) { updates.push('primary_caregiver=?'); params.push(String(primaryCaregiverRaw).trim()); }
+    if (userId) { updates.push('created_by=?'); params.push(userId); }
+
+    if (updates.length === 0) return cb(null);
+    const sql = `UPDATE patients SET ${updates.join(', ')} WHERE id = ?`;
+    params.push(patientId);
+    db.query(sql, params, (err) => {
+      if (err) return cb(err);
+      cb(null);
+    });
+  }
+
   // find user id (created_by) if email provided
   function findUserId(email, cb) {
     if (!email) return cb(null, null);
@@ -112,12 +161,20 @@ app.post('/api/save-form', (req, res) => {
         console.error('[/api/save-form] patient error:', errP);
         return res.status(400).json({ success: false, message: errP.message || 'Patient error', error: errP.message });
       }
-      insertSection(patientId, (errS, sectionId) => {
-        if (errS) {
-          console.error('[/api/save-form] insert section error:', errS);
-          return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+      // update patient record with demographic fields when available
+      const demographics = sections && sections.demographics ? sections.demographics : null;
+      updatePatientFromDemographics(patientId, demographics, userId, (errU) => {
+        if (errU) {
+          console.error('[/api/save-form] update patient error:', errU);
+          return res.status(500).json({ success: false, message: 'Failed to update patient', error: errU.message });
         }
-        res.json({ success: true, patient_id: patientId, section_id: sectionId });
+        insertSection(patientId, (errS, sectionId) => {
+          if (errS) {
+            console.error('[/api/save-form] insert section error:', errS);
+            return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+          }
+          res.json({ success: true, patient_id: patientId, section_id: sectionId });
+        });
       });
     });
   });
