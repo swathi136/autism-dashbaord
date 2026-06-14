@@ -131,9 +131,10 @@ app.post('/api/save-form', (req, res) => {
     db.query('SELECT id FROM patients WHERE (child_name = ? AND child_name IS NOT NULL) OR (parent_email = ? AND parent_email IS NOT NULL) LIMIT 1', [patient_name || '', parent_email || ''], (err, rows) => {
       if (err) return cb(err);
       if (rows.length > 0) return cb(null, rows[0].id);
-      // create minimal patient (allow null values)
-      const nameForInsert = (patient_name && patient_name.trim()) ? patient_name.trim() : 'Unknown';
+      // create minimal patient (allow empty values). If patient_name is missing, insert empty string
+      const nameForInsert = (patient_name && patient_name.trim()) ? patient_name.trim() : '';
       const insertSql = 'INSERT INTO patients (child_name, parent_name, parent_email, created_at) VALUES (?,?,?,NOW())';
+      console.log('[/api/save-form] creating patient with:', { nameForInsert, parent_email: parent_email || null });
       db.query(insertSql, [nameForInsert, null, parent_email || null], (err2, result) => {
         if (err2) return cb(err2);
         const newId = result.insertId;
@@ -168,12 +169,72 @@ app.post('/api/save-form', (req, res) => {
           console.error('[/api/save-form] update patient error:', errU);
           return res.status(500).json({ success: false, message: 'Failed to update patient', error: errU.message });
         }
-        insertSection(patientId, (errS, sectionId) => {
-          if (errS) {
-            console.error('[/api/save-form] insert section error:', errS);
-            return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+
+        // Save consent section separately if present
+        const consentData = sections && sections.consent ? sections.consent : null;
+        function saveConsent(cb) {
+          if (!consentData) return cb(null);
+          const consentJson = JSON.stringify(consentData);
+          const sql = 'INSERT INTO consents (patient_id, data, created_at) VALUES (?,?,NOW())';
+          db.query(sql, [patientId, consentJson], (err, result) => {
+            if (err) return cb(err);
+            cb(null, result.insertId);
+          });
+        }
+
+        // Save demographics section into dedicated table as JSON as well
+        function saveDemographics(cb) {
+          if (!demographics) return cb(null);
+          const demoJson = JSON.stringify(demographics);
+          const sql = 'INSERT INTO patient_demographics (patient_id, data, created_at) VALUES (?,?,NOW())';
+          db.query(sql, [patientId, demoJson], (err, result) => {
+            if (err) return cb(err);
+            cb(null, result.insertId);
+          });
+        }
+
+        // After saving the specific sections, still save the combined full_form into patient_sections
+        // Save parent contact into `parents` table when consent contains parent info
+        function saveParent(cb) {
+          if (!consentData || typeof consentData !== 'object') return cb(null);
+          const parentName = consentData.parent_name || consentData['1. Parent/guardian name'] || null;
+          const relationship = consentData.relationship || consentData['2. Relationship to child'] || null;
+          const contactNumber = consentData.contact_number || consentData['3. Contact number'] || null;
+          const parentEmail = consentData.parent_email || consentData['4. Email ID'] || parent_email || null;
+          if (!parentName && !parentEmail && !contactNumber) return cb(null);
+          const sql = 'INSERT INTO parents (patient_id, parent_name, relationship, contact_number, parent_email, created_at) VALUES (?,?,?,?,?,NOW())';
+          db.query(sql, [patientId, parentName, relationship, contactNumber, parentEmail], (err, result) => {
+            if (err) return cb(err);
+            cb(null, result.insertId);
+          });
+        }
+
+        saveConsent((errC, consentId) => {
+          if (errC) {
+            console.error('[/api/save-form] save consent error:', errC);
+            return res.status(500).json({ success: false, message: 'Failed to save consent', error: errC.message });
           }
-          res.json({ success: true, patient_id: patientId, section_id: sectionId });
+          saveDemographics((errD, demoId) => {
+            if (errD) {
+              console.error('[/api/save-form] save demographics error:', errD);
+              return res.status(500).json({ success: false, message: 'Failed to save demographics', error: errD.message });
+            }
+            // also save parent contact
+            saveParent((errP, parentId) => {
+              if (errP) {
+                console.error('[/api/save-form] save parent error:', errP);
+                return res.status(500).json({ success: false, message: 'Failed to save parent', error: errP.message });
+              }
+              insertSection(patientId, (errS, sectionId) => {
+                if (errS) {
+                  console.error('[/api/save-form] insert section error:', errS);
+                  return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+                }
+                res.json({ success: true, patient_id: patientId, consent_id: consentId || null, demographics_id: demoId || null, parent_id: parentId || null, section_id: sectionId });
+              });
+            });
+            
+          });
         });
       });
     });

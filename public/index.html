@@ -121,7 +121,7 @@
             </div>
 
             <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <form id="clinicalForm" onsubmit="handleFormSubmit(event)">
+                <form id="clinicalForm" onsubmit="handleFormSubmit(event)" novalidate>
                     
                     <!-- Section 1 -->
                     <section id="consent" class="form-section active p-6 md:p-8">
@@ -848,8 +848,10 @@
             let created_by_email = '';
             try { const u = getCurrentUser(); if (u && u.email) created_by_email = u.email; } catch (e) {}
 
+            // determine API base: when using Live Server (127.0.0.1:5500) point to backend on :3000
+            const API_BASE = ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && window.location.port === '5500') ? 'http://localhost:3000' : '';
             // POST to server
-            fetch('/api/save-form', {
+            fetch(API_BASE + '/api/save-form', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ patient_name, parent_email, sections, created_by_email })
