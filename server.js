@@ -193,6 +193,41 @@ app.post('/api/save-form', (req, res) => {
           });
         }
 
+        // Save environment section into typed patient_environment table and keep raw JSON
+        function saveEnvironment(cb) {
+          const env = sections && sections.environment ? sections.environment : null;
+          console.log('[/api/save-form] saveEnvironment env present?:', env !== null, 'type:', typeof env, 'env keys:', env && typeof env === 'object' ? Object.keys(env) : null);
+          if (!env || typeof env !== 'object') return cb(null);
+          // map common keys (tolerant to different label names)
+          const country = env.country || env['1. Country'] || null;
+          const state = env.state || env['2. State'] || null;
+          const district = env.district || env['3. District'] || null;
+          const city = env.city || env['4. City / town / village'] || env['4. City / town / village'] || env['city'] || null;
+          const pin_code = env.pin_code || env['5. Pin code'] || env['pin code'] || null;
+          const urbanity = env['6. Urban / semi-urban / rural location'] || env.urbanity || env.urban || null;
+          const current_residence = env['7. Current place of residence'] || env.current_residence || null;
+          const duration_of_stay = env['8. Duration of stay in present location'] || env.duration_of_stay || null;
+          const exposure_industrial = env['9. Exposure to industrial pollution'] || env.exposure_industrial || null;
+          const exposure_pesticides = env['10. Exposure to pesticides / agricultural chemicals'] || env.exposure_pesticides || null;
+          const drinking_water_source = env['11. Drinking water source'] || env.drinking_water_source || null;
+          const house_type = env['12. Type of house'] || env.house_type || null;
+          const exposure_pets = env['13. Exposure to pets or farm animals'] || env.exposure_pets || null;
+          const screen_time = env['14. Screen exposure time daily'] || env.screen_time || null;
+
+          const raw = JSON.stringify(env);
+          const sql = `INSERT INTO patient_environment (patient_id,country,state,district,city,pin_code,urbanity,current_residence,duration_of_stay,exposure_industrial,exposure_pesticides,drinking_water_source,house_type,exposure_pets,screen_time,raw_data,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`;
+          const params = [patientId,country,state,district,city,pin_code,urbanity,current_residence,duration_of_stay,exposure_industrial,exposure_pesticides,drinking_water_source,house_type,exposure_pets,screen_time,raw];
+          console.log('[/api/save-form] saveEnvironment params:', params.map(p => (p && p.length && p.length > 200) ? (String(p).slice(0,200)+'...') : p));
+          db.query(sql, params, (err, result) => {
+            if (err) {
+              console.error('[/api/save-form] saveEnvironment db error:', err);
+              return cb(err);
+            }
+            console.log('[/api/save-form] saveEnvironment inserted id:', result.insertId);
+            cb(null, result.insertId);
+          });
+        }
+
         // After saving the specific sections, still save the combined full_form into patient_sections
         // Save parent contact into `parents` table when consent contains parent info
         function saveParent(cb) {
@@ -214,7 +249,7 @@ app.post('/api/save-form', (req, res) => {
             console.error('[/api/save-form] save consent error:', errC);
             return res.status(500).json({ success: false, message: 'Failed to save consent', error: errC.message });
           }
-          saveDemographics((errD, demoId) => {
+            saveDemographics((errD, demoId) => {
             if (errD) {
               console.error('[/api/save-form] save demographics error:', errD);
               return res.status(500).json({ success: false, message: 'Failed to save demographics', error: errD.message });
@@ -225,15 +260,21 @@ app.post('/api/save-form', (req, res) => {
                 console.error('[/api/save-form] save parent error:', errP);
                 return res.status(500).json({ success: false, message: 'Failed to save parent', error: errP.message });
               }
-              insertSection(patientId, (errS, sectionId) => {
-                if (errS) {
-                  console.error('[/api/save-form] insert section error:', errS);
-                  return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+              // save environment typed table
+              saveEnvironment((errE, envId) => {
+                if (errE) {
+                  console.error('[/api/save-form] save environment error:', errE);
+                  return res.status(500).json({ success: false, message: 'Failed to save environment', error: errE.message });
                 }
-                res.json({ success: true, patient_id: patientId, consent_id: consentId || null, demographics_id: demoId || null, parent_id: parentId || null, section_id: sectionId });
+                insertSection(patientId, (errS, sectionId) => {
+                  if (errS) {
+                    console.error('[/api/save-form] insert section error:', errS);
+                    return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+                  }
+                  res.json({ success: true, patient_id: patientId, consent_id: consentId || null, demographics_id: demoId || null, parent_id: parentId || null, environment_id: envId || null, section_id: sectionId });
+                });
               });
             });
-            
           });
         });
       });
