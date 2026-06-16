@@ -55,8 +55,7 @@ app.post('/api/save-form', (req, res) => {
   } : {}));
 
   const { patient_name, parent_email, sections, created_by_email } = req.body || {};
-  console.log("CONSENT DATA:", sections?.consent);
-  console.log("DEMOGRAPHICS DATA:", sections?.demographics);
+
   // helper to continue insert once we have a patient_id
   function insertSection(patientId, cb) {
     const data = JSON.stringify(sections || {});
@@ -228,60 +227,7 @@ app.post('/api/save-form', (req, res) => {
             cb(null, result.insertId);
           });
         }
-        function saveMilestones(cb) {
-  const m = sections?.milestones;
 
-  if (!m || typeof m !== "object") return cb(null);
-
-  const sql = `
-    INSERT INTO milestones (
-      patient_id,
-      neck_holding,
-      sitting_age,
-      crawling_age,
-      standing_age,
-      walking_age,
-      first_words_age,
-      two_word_phrase_age,
-      toilet_training_age,
-      social_smile_age,
-      response_to_name_age,
-      fine_motor,
-      gross_motor,
-      developmental_delay_notes
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  const params = [
-    patientId,
-    m["Neck Holding"] || m["neck_holding"] || null,
-    m["Sitting Age"] || m["sitting_age"] || null,
-    m["Crawling Age"] || m["crawling_age"] || null,
-    m["Standing Age"] || m["standing_age"] || null,
-    m["Walking Age"] || m["walking_age"] || null,
-    m["First Words Age"] || m["first_words_age"] || null,
-    m["Two Word Phrase Age"] || m["two_word_phrase_age"] || null,
-    m["Toilet Training Age"] || m["toilet_training_age"] || null,
-    m["Social Smile Age"] || m["social_smile_age"] || null,
-    m["Response To Name Age"] || m["response_to_name_age"] || null,
-    m["Fine Motor"] || m["fine_motor"] || null,
-    m["Gross Motor"] || m["gross_motor"] || null,
-    m["Developmental Delay Notes"] || m["developmental_delay_notes"] || null
-  ];
-
-  console.log("Milestones received:", m);
-
-  db.query(sql, params, (err, result) => {
-    if (err) {
-      console.error("saveMilestones error:", err);
-      return cb(err);
-    }
-
-    console.log("Milestones inserted:", result.insertId);
-    cb(null, result.insertId);
-  });
-}
         // After saving the specific sections, still save the combined full_form into patient_sections
         // Save parent contact into `parents` table when consent contains parent info
         function saveParent(cb) {
@@ -309,52 +255,32 @@ app.post('/api/save-form', (req, res) => {
               return res.status(500).json({ success: false, message: 'Failed to save demographics', error: errD.message });
             }
             // also save parent contact
-            saveEnvironment((errE, envId) => {
-  if (errE) {
-    console.error('save environment error:', errE);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to save environment'
-    });
-  }
-
-  saveMilestones((errM, milestoneId) => {
-    if (errM) {
-      console.error('save milestones error:', errM);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to save milestones'
-      });
-    }
-
-    insertSection(patientId, (errS, sectionId) => {
-      if (errS) {
-        console.error('insert section error:', errS);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to save section'
-        });
-      }
-
-      res.json({
-        success: true,
-        patient_id: patientId,
-        consent_id: consentId || null,
-        demographics_id: demoId || null,
-        parent_id: parentId || null,
-        environment_id: envId || null,
-        milestone_id: milestoneId || null,
-        section_id: sectionId
-      });
-    });
-  });
-});
+            saveParent((errP, parentId) => {
+              if (errP) {
+                console.error('[/api/save-form] save parent error:', errP);
+                return res.status(500).json({ success: false, message: 'Failed to save parent', error: errP.message });
+              }
+              // save environment typed table
+              saveEnvironment((errE, envId) => {
+                if (errE) {
+                  console.error('[/api/save-form] save environment error:', errE);
+                  return res.status(500).json({ success: false, message: 'Failed to save environment', error: errE.message });
+                }
+                insertSection(patientId, (errS, sectionId) => {
+                  if (errS) {
+                    console.error('[/api/save-form] insert section error:', errS);
+                    return res.status(500).json({ success: false, message: 'Failed to save section', error: errS.message });
+                  }
+                  res.json({ success: true, patient_id: patientId, consent_id: consentId || null, demographics_id: demoId || null, parent_id: parentId || null, environment_id: envId || null, section_id: sectionId });
+                });
+              });
             });
           });
         });
       });
     });
   });
+});
 
 app.listen(3000, () => {
   console.log("Server running at http://localhost:3000");

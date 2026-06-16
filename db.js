@@ -3,8 +3,8 @@ const mysql = require("mysql2");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "password",
-  database: "reehab_db"
+  password: "r00t",
+  database: "rehaab_db"
 });
 
 // Ensure the database name matches the created schema (rehaab_db)
