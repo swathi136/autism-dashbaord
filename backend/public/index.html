@@ -855,17 +855,34 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ patient_name, parent_email, sections, created_by_email })
-            }).then(r => r.json()).then(res => {
-                if (res && res.success) {
-                    document.getElementById('successMessage').classList.remove('hidden');
-                    document.querySelector('.flex-1.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
-                    document.getElementById('clinicalForm').reset();
-                    setTimeout(() => switchTab('consent'), 500);
-                    setTimeout(() => document.getElementById('successMessage').classList.add('hidden'), 5000);
-                } else {
-                    alert('Failed to save form');
+            })
+            .then(async (r) => {
+                let data;
+                try {
+                    data = await r.json();
+                } catch (e) {
+                    throw new Error(`Invalid JSON response. HTTP ${r.status}`);
                 }
-            }).catch(err => { console.error(err); alert('Error saving form'); });
+
+                console.log("save-form response:", data);
+
+                if (!r.ok || !data.success) {
+                    const msg = data.error || data.message || "Unknown backend error";
+                    const table = data.table ? `\nTable: ${data.table}` : "";
+                    alert(`Failed to save form${table}\n${msg}`);
+                    return;
+                }
+
+                document.getElementById('successMessage').classList.remove('hidden');
+                document.querySelector('.flex-1.overflow-y-auto').scrollTo({ top: 0, behavior: 'smooth' });
+                document.getElementById('clinicalForm').reset();
+                setTimeout(() => switchTab('consent'), 500);
+                setTimeout(() => document.getElementById('successMessage').classList.add('hidden'), 5000);
+            })
+            .catch(err => {
+                console.error("save-form fetch error:", err);
+                alert(`Error saving form\n${err.message}`);
+            });
         }
     </script>
     <script src="auth.js"></script>
