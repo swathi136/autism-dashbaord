@@ -2,6 +2,71 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+function mapEyeContact(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "Normal";
+    if (raw === "mild" || raw === "moderate") return "Reduced";
+    if (raw === "severe") return "Absent";
+    return null;
+}
+
+function mapResponseToName(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "Normal";
+    if (raw === "mild") return "Occasional";
+    if (raw === "moderate") return "Rare";
+    if (raw === "severe") return "Absent";
+    return null;
+}
+
+function mapPresentReducedAbsent(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "Present";
+    if (raw === "mild" || raw === "moderate") return "Reduced";
+    if (raw === "severe") return "Absent";
+    return null;
+}
+
+function mapInterestInPeers(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "Normal";
+    if (raw === "mild" || raw === "moderate") return "Low";
+    if (raw === "severe") return "Absent";
+    return null;
+}
+
+function mapPretendPlay(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "Present";
+    if (raw === "mild" || raw === "moderate") return "Limited";
+    if (raw === "severe") return "Absent";
+    return null;
+}
+
+function mapBooleanFromSeverity(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return 0;
+    if (raw === "mild" || raw === "moderate" || raw === "severe") return 1;
+    return null;
+}
+
+function mapNoneMildModerateSevere(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "None";
+    if (raw === "mild") return "Mild";
+    if (raw === "moderate") return "Moderate";
+    if (raw === "severe") return "Severe";
+    return null;
+}
+
+function mapAttentionSpan(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (raw === "typical") return "Normal";
+    if (raw === "mild") return "Reduced";
+    if (raw === "moderate" || raw === "severe") return "Very Low";
+    return null;
+}
+
 function v(obj, key) {
     if (!obj) return null;
     const val = obj[key];
@@ -19,6 +84,7 @@ router.post("/", async (req, res) => {
     const demographics = sections.demographics || {};
     const environment = sections.environment || {};
     const diagnosis = sections.diagnosis || {};
+    const symptoms = sections.symptoms || {};
     const medical = sections.medical || {};
     const milestones = sections.milestones || {};
     const family = sections.family || {};
@@ -175,6 +241,68 @@ router.post("/", async (req, res) => {
         v(diagnosis, "14. Skills lost during regression: speech / eye contact / social interaction / motor skills / others")
     ]
 },
+                {
+                    name: "core_symptoms",
+                    sql: `
+                        INSERT INTO core_symptoms (
+                            child_id,
+                            eye_contact,
+                            response_to_name,
+                            social_smile,
+                            joint_attention,
+                            interest_in_peers,
+                            pretend_play,
+                            repetitive_movements,
+                            spinning_or_lining_objects,
+                            hand_flapping,
+                            toe_walking,
+                            restricted_interests,
+                            sensory_sensitivity_sound,
+                            sensory_sensitivity_light,
+                            sensory_sensitivity_touch,
+                            sensory_sensitivity_food,
+                            hyperactivity,
+                            attention_span,
+                            aggression,
+                            self_injury,
+                            anxiety,
+                            meltdowns,
+                            sleep_disturbance,
+                            communication_difficulty,
+                            social_interaction_difficulty,
+                            daily_living_skill_difficulty
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `,
+                    values: [
+                        child_id,
+                        mapEyeContact(v(symptoms, "1. Eye contact")),
+                        mapResponseToName(v(symptoms, "2. Response to name")),
+                        mapPresentReducedAbsent(v(symptoms, "3. Social smile")),
+                        mapPresentReducedAbsent(v(symptoms, "4. Joint attention")),
+                        mapInterestInPeers(v(symptoms, "5. Interest in peers")),
+                        mapPretendPlay(v(symptoms, "6. Pretend play")),
+                        mapBooleanFromSeverity(v(symptoms, "7. Repetitive movements")),
+                        mapBooleanFromSeverity(v(symptoms, "8. Spinning / lining up objects")),
+                        mapBooleanFromSeverity(v(symptoms, "9. Hand flapping")),
+                        mapBooleanFromSeverity(v(symptoms, "10. Toe walking")),
+                        mapBooleanFromSeverity(v(symptoms, "11. Restricted interests")),
+                        mapNoneMildModerateSevere(v(symptoms, "12. Sensory sensitivity to sound")),
+                        mapNoneMildModerateSevere(v(symptoms, "13. Sensory sensitivity to light")),
+                        mapNoneMildModerateSevere(v(symptoms, "14. Sensory sensitivity to touch")),
+                        mapNoneMildModerateSevere(v(symptoms, "15. Sensory sensitivity to food texture")),
+                        mapNoneMildModerateSevere(v(symptoms, "16. Hyperactivity")),
+                        mapAttentionSpan(v(symptoms, "17. Attention span")),
+                        mapBooleanFromSeverity(v(symptoms, "18. Aggression")),
+                        mapBooleanFromSeverity(v(symptoms, "19. Self-injury")),
+                        mapNoneMildModerateSevere(v(symptoms, "20. Anxiety")),
+                        mapBooleanFromSeverity(v(symptoms, "21. Meltdowns")),
+                        mapBooleanFromSeverity(v(symptoms, "22. Sleep disturbance")),
+                        mapNoneMildModerateSevere(v(symptoms, "23. Communication difficulty")),
+                        mapNoneMildModerateSevere(v(symptoms, "24. Social interaction difficulty")),
+                        mapNoneMildModerateSevere(v(symptoms, "25. Daily living skill difficulty"))
+            ]
+                },
                 {
                     name: "medical_history",
                     sql: `
