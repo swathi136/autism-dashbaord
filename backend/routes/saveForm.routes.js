@@ -65,7 +65,9 @@ router.post("/", async (req, res) => {
             v(demographics, "6. Weight"),
             v(demographics, "7. BMI"),
             v(demographics, "8. Blood group"),
-            v(demographics, "9. School-going status"),
+            ["yes", "ongoing", "school going", "true", "1"].includes(
+                String(v(demographics, "9. School-going status") || "").trim().toLowerCase()
+            ) ? 1 : 0,
             v(demographics, "10. Type of school: mainstream /inclusive/ special school / home schooling"),
             v(demographics, "11. Class / grade"),
             v(demographics, "12. Primary caregiver")
@@ -115,7 +117,13 @@ router.post("/", async (req, res) => {
                         v(environment, "3. District"),
                         v(environment, "4. City / town / village"),
                         v(environment, "5. Pin code"),
-                        v(environment, "6. Urban / semi-urban / rural location"),
+                        (() => {
+                            const raw = String(v(environment, "6. Urban / semi-urban / rural location") || "").trim().toLowerCase();
+                            if (raw === "urban") return "Urban";
+                            if (raw === "semi-urban" || raw === "semi urban" || raw === "semiurban") return "Semi-Urban";
+                            if (raw === "rural") return "Rural";
+                            return null;
+                        })(),
                         v(environment, "7. Current place of residence"),
                         v(environment, "8. Duration of stay in present location"),
                         v(environment, "9. Exposure to industrial pollution"),
@@ -127,34 +135,46 @@ router.post("/", async (req, res) => {
                     ]
                 },
                 {
-                    name: "diagnosis",
-                    sql: `
-                        INSERT INTO diagnosis
-                        (
-                            child_id, age_at_first_concern, age_at_diagnosis, diagnosed_by, diagnosis,
-                            severity, diagnostic_tool, cars_score, ados_score, isaa_score,
-                            iq_or_dq, language_level, regression_history, age_of_regression, skills_lost
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    `,
-                    values: [
-                        child_id,
-                        v(diagnosis, "1. Age at first concern noticed"),
-                        v(diagnosis, "2. Age at diagnosis"),
-                        v(diagnosis, "3. Diagnosed by: pediatrician / developmental pediatrician / neurologist / psychiatrist / psychologist"),
-                        v(diagnosis, "4. Diagnosis given: ASD / ADHD / global developmental delay / speech delay / intellectual disability / others"),
-                        v(diagnosis, "5. Severity level: mild / moderate / severe"),
-                        v(diagnosis, "6. Diagnostic tool used, if known: ADOS / CARS / DSM-5 / ISAA / M-CHAT / others"),
-                        v(diagnosis, "7. Childhood Autism Rating Scale (CARS) score, if available"),
-                        v(diagnosis, "8. Autism Diagnostic Observation Schedule (ADOS-2) score, if available"),
-                        v(diagnosis, "9. Indian Scale for Assessment of Autism (ISAA) score, if available"),
-                        v(diagnosis, "10. IQ / developmental quotient, if tested"),
-                        v(diagnosis, "11. Language level: non-verbal / single words / short phrases / fluent speech"),
-                        v(diagnosis, "12. Regression history: yes / no"),
-                        v(diagnosis, "13. Age of regression, if any"),
-                        v(diagnosis, "14. Skills lost during regression: speech / eye contact / social interaction / motor skills / others")
-                    ]
-                },
+    name: "diagnosis",
+    sql: `
+        INSERT INTO diagnosis
+        (
+            child_id,
+            age_at_first_concern,
+            age_at_diagnosis,
+            diagnosed_by,
+            diagnosis_given,
+            severity_level,
+            diagnostic_tool_used,
+            cars_score,
+            ados2_score,
+            isaa_score,
+            iq_developmental_quotient,
+            language_level,
+            regression_history,
+            age_of_regression,
+            skills_lost_during_regression
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    values: [
+        child_id,
+        v(diagnosis, "1. Age at first concern noticed"),
+        v(diagnosis, "2. Age at diagnosis"),
+        v(diagnosis, "3. Diagnosed by: pediatrician / developmental pediatrician / neurologist / psychiatrist / psychologist"),
+        v(diagnosis, "4. Diagnosis given: ASD / ADHD / global developmental delay / speech delay / intellectual disability / others"),
+        v(diagnosis, "5. Severity level: mild / moderate / severe"),
+        v(diagnosis, "6. Diagnostic tool used, if known: ADOS / CARS / DSM-5 / ISAA / M-CHAT / others"),
+        v(diagnosis, "7. Childhood Autism Rating Scale (CARS) score, if available"),
+        v(diagnosis, "8. Autism Diagnostic Observation Schedule (ADOS-2) score, if available"),
+        v(diagnosis, "9. Indian Scale for Assessment of Autism (ISAA) score, if available"),
+        v(diagnosis, "10. IQ / developmental quotient, if tested"),
+        v(diagnosis, "11. Language level: non-verbal / single words / short phrases / fluent speech"),
+        v(diagnosis, "12. Regression history: yes / no"),
+        v(diagnosis, "13. Age of regression, if any"),
+        v(diagnosis, "14. Skills lost during regression: speech / eye contact / social interaction / motor skills / others")
+    ]
+},
                 {
                     name: "medical_history",
                     sql: `
