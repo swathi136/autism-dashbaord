@@ -27,6 +27,9 @@ app.use("/api/uploads", require("./routes/uploads.routes"));
 app.use("/api/save-form", require("./routes/saveForm.routes"));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
