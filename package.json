@@ -5,7 +5,9 @@
   "main": "db.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:css": "tailwindcss -i ./backend/public/tailwind.css -o ./backend/public/styles.css --minify",
+    "watch:css": "tailwindcss -i ./backend/public/tailwind.css -o ./backend/public/styles.css --watch"
   },
   "repository": {
     "type": "git",
@@ -25,5 +27,8 @@
     "express": "^5.2.1",
     "multer": "^2.2.0",
     "mysql2": "^3.22.5"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   }
 }
