@@ -98,10 +98,16 @@ router.post("/", async (req, res) => {
     const amino = sections.amino || {};
     const uploads = sections.uploads || {};
 
-    db.beginTransaction((txErr) => {
-        if (txErr) {
-            return res.status(500).json({ success: false, error: txErr.message });
+    db.getConnection((connErr, connection) => {
+        if (connErr) {
+            return res.status(500).json({ success: false, error: connErr.message });
         }
+
+        connection.beginTransaction((txErr) => {
+            if (txErr) {
+                connection.release();
+                return res.status(500).json({ success: false, error: txErr.message });
+            }
 
         const demoSql = `
             INSERT INTO demographics
@@ -139,11 +145,12 @@ router.post("/", async (req, res) => {
             v(demographics, "12. Primary caregiver")
         ];
 
-        db.query(demoSql, demoValues, (demoErr, demoResult) => {
+        connection.query(demoSql, demoValues, (demoErr, demoResult) => {
             if (demoErr) {
-                return db.rollback(() =>
-                    res.status(500).json({ success: false, table: "demographics", error: demoErr.sqlMessage || demoErr.message })
-                );
+                return connection.rollback(() => {
+                    connection.release();
+                    res.status(500).json({ success: false, table: "demographics", error: demoErr.sqlMessage || demoErr.message });
+                });
             }
 
             const child_id = demoResult.insertId;
@@ -874,13 +881,15 @@ router.post("/", async (req, res) => {
 
         const runTask = (index) => {
                 if (index >= tasks.length) {
-                    return db.commit((commitErr) => {
+                    return connection.commit((commitErr) => {
                         if (commitErr) {
-                            return db.rollback(() =>
-                                res.status(500).json({ success: false, error: commitErr.message })
-                            );
+                            return connection.rollback(() => {
+                                connection.release();
+                                res.status(500).json({ success: false, error: commitErr.message });
+                            });
                         }
 
+                        connection.release();
                         res.json({
                             success: true,
                             message: "Full form saved successfully",
@@ -890,15 +899,16 @@ router.post("/", async (req, res) => {
                 }
 
                 const task = tasks[index];
-                db.query(task.sql, task.values, (err) => {
+                connection.query(task.sql, task.values, (err) => {
                     if (err) {
-                        return db.rollback(() =>
+                        return connection.rollback(() => {
+                            connection.release();
                             res.status(500).json({
                                 success: false,
                                 table: task.name,
                                 error: err.sqlMessage || err.message
-                            })
-                        );
+                            });
+                        });
                     }
                     runTask(index + 1);
                 });
@@ -906,6 +916,7 @@ router.post("/", async (req, res) => {
 
             runTask(0);
         });
+    });
     });
 });
 
